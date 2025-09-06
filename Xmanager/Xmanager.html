@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xtrem Net - Gestion ClientÃ¨le</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Xtrem Net - Gestion ClientÃ¨le</h1>
+            <p>Application de gestion des clients et paiements mensuels</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('dashboard')">Tableau de Bord</div>
+            <div class="tab" onclick="switchTab('clients')">Clients</div>
+            <div class="tab" onclick="switchTab('payments')">Paiements</div>
+            <div class="tab" onclick="switchTab('analytics')">Analytiques</div>
+            <div class="tab" onclick="switchTab('charges')">Charges Entreprise</div>
+        </div>
+        
+        <div class="tab-content active" id="dashboard">
+            <div class="action-bar">
+                <div class="filters">
+                    <select class="filter-select" id="monthFilter">
+                        <option value="all">Tous les mois</option>
+                        <option value="janvier">Janvier</option>
+                        <option value="fÃ©vrier">FÃ©vrier</option>
+                        <option value="mars">Mars</option>
+                        <option value="avril">Avril</option>
+                        <option value="mai">Mai</option>
+                        <option value="juin">Juin</option>
+                        <option value="juillet">Juillet</option>
+                        <option value="aoÃ»t">AoÃ»t</option>
+                        <option value="septembre">Septembre</option>
+                        <option value="octobre">Octobre</option>
+                        <option value="novembre">Novembre</option>
+                        <option value="dÃ©cembre">DÃ©cembre</option>
+                    </select>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="all">Tous les statuts</option>
+                        <option value="payÃ©">PayÃ©</option>
+                        <option value="en-retard">En retard</option>
+                        <option value="en-attente">En attente</option>
+                    </select>
+                </div>
+                <button class="btn btn-download" onclick="exportToExcel()">Exporter vers Excel</button>
+            </div>
+            
+            <div class="dashboard">
+                <div class="stat-card">
+                    <div class="stat-label">Revenu Total</div>
+                    <div class="stat-value" id="totalRevenue">0 FCFA</div>
+                    <div class="stat-label">Sur la pÃ©riode sÃ©lectionnÃ©e</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Charges Total</div>
+                    <div class="stat-value" id="totalCharges">0 FCFA</div>
+                    <div class="stat-label">Sur la pÃ©riode sÃ©lectionnÃ©e</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">BÃ©nÃ©fice Net</div>
+                    <div class="stat-value" id="totalProfit">0 FCFA</div>
+                    <div class="stat-label">Revenus - Charges</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Clients Actifs</div>
+                    <div class="stat-value" id="totalClients">0</div>
+                    <div class="stat-label">Dont <span id="lateClients">0</span> en retard</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>Prochains Paiements et Ã‰chÃ©ances</h3>
+                <div class="table-container">
+                    <table id="upcomingPayments">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Date d'Abonnement</th>
+                                <th>Date d'Ã‰chÃ©ance</th>
+                                <th>Jours Restants</th>
+                                <th>Montant</th>
+                                <th>Contact</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Les donnÃ©es seront ajoutÃ©es dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="clients">
+            <div class="action-bar">
+                <div class="filters">
+                    <input type="text" placeholder="Rechercher un client..." class="filter-input" id="clientSearch">
+                    <select class="filter-select" id="clientStatusFilter">
+                        <option value="all">Tous les statuts</option>
+                        <option value="payÃ©">Ã€ jour</option>
+                        <option value="en-retard">En retard</option>
+                        <option value="en-attente">En attente</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="openModal('addClient')">+ Nouveau Client</button>
+            </div>
+            
+            <div class="card">
+                <h3>Liste des Clients</h3>
+                <div class="table-container">
+                    <table id="clientsTable">
+                        <thead>
+                            <tr>
+                                <th>Nom Client</th>
+                                <th>Mois</th>
+                                <th>Date d'Abonnement</th>
+                                <th>Date d'Ã‰chÃ©ance</th>
+                                <th>Contact</th>
+                                <th>Montant VersÃ© (FCFA)</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Les donnÃ©es seront ajoutÃ©es dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="payments">
+            <div class="action-bar">
+                <div class="filters">
+                    <select class="filter-select" id="paymentMonthFilter">
+                        <option value="all">Tous les mois</option>
+                        <option value="janvier">Janvier</option>
+                        <option value="fÃ©vrier">FÃ©vrier</option>
+                        <option value="mars">Mars</option>
+                        <option value="avril">Avril</option>
+                        <option value="mai">Mai</option>
+                        <option value="juin">Juin</option>
+                        <option value="juillet">Juillet</option>
+                        <option value="aoÃ»t">AoÃ»t</option>
+                        <option value="septembre">Septembre</option>
+                        <option value="octobre">Octobre</option>
+                        <option value="novembre">Novembre</option>
+                        <option value="dÃ©cembre">DÃ©cembre</option>
+                    </select>
+                    <select class="filter-select" id="paymentStatusFilter">
+                        <option value="all">Tous les statuts</option>
+                        <option value="payÃ©">PayÃ©</option>
+                        <option value="en-retard">En retard</option>
+                        <option value="en-attente">En attente</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="openModal('addPayment')">+ Nouveau Paiement</button>
+            </div>
+            
+            <div class="card">
+                <h3>Historique des Paiements</h3>
+                <div class="table-container">
+                    <table id="paymentsTable">
+                        <thead>
+                            <tr>
+                                <th>Mois</th>
+                                <th>Client</th>
+                                <th>Date d'Abonnement</th>
+                                <th>Date Paiement</th>
+                                <th>Date d'Ã‰chÃ©ance</th>
+                                <th>Montant (FCFA)</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Les donnÃ©es seront ajoutÃ©es dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="analytics">
+            <div class="card">
+                <h3>Analyse des Revenus et Charges par Mois</h3>
+                <div style="height: 400px; margin: 20px 0;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="dashboard">
+                <div class="card">
+                    <h3>RÃ©partition des Clients par Mois</h3>
+                    <div style="height: 300px; margin: 20px 0;">
+                        <canvas id="clientsChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Statut des Paiements</h3>
+                    <div style="height: 300px; margin: 20px 0;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>Ã‰volution des BÃ©nÃ©fices</h3>
+                <div style="height: 350px; margin: 20px 0;">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="charges">
+            <div class="action-bar">
+                <div class="filters">
+                    <select class="filter-select" id="chargesMonthFilter">
+                        <option value="all">Tous les mois</option>
+                        <option value="janvier">Janvier</option>
+                        <option value="fÃ©vrier">FÃ©vrier</option>
+                        <option value="mars">Mars</option>
+                        <option value="avril">Avril</option>
+                        <option value="mai">Mai</option>
+                        <option value="juin">Juin</option>
+                        <option value="juillet">Juillet</option>
+                        <option value="aoÃ»t">AoÃ»t</option>
+                        <option value="septembre">Septembre</option>
+                        <option value="octobre">Octobre</option>
+                        <option value="novembre">Novembre</option>
+                        <option value="dÃ©cembre">DÃ©cembre</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="openModal('addCharge')">+ Ajouter des Charges</button>
+            </div>
+            
+            <div class="card">
+                <h3>Charges de l'Entreprise</h3>
+                <div class="table-container">
+                    <table id="chargesTable">
+                        <thead>
+                            <tr>
+                                <th>Mois</th>
+                                <th>Type de Charge</th>
+                                <th>Description</th>
+                                <th>Montant (FCFA)</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Les donnÃ©es seront ajoutÃ©es dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>RÃ©sumÃ© des Charges par Mois</h3>
+                <div style="height: 400px; margin: 20px 0;">
+                    <canvas id="chargesSummaryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal pour ajouter un client -->
+        <div id="addClient" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Ajouter un Nouveau Client</h3>
+                    <span class="close" onclick="closeModal('addClient')">&times;</span>
+                </div>
+                <form id="clientForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clientName">Nom Client *</label>
+                            <input type="text" id="clientName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="clientContact">Contact *</label>
+                            <input type="text" id="clientContact" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clientMonth">Mois *</label>
+                            <select id="clientMonth" required>
+                                <option value="janvier">Janvier</option>
+                                <option value="fÃ©vrier">FÃ©vrier</option>
+                                <option value="mars">Mars</option>
+                                <option value="avril">Avril</option>
+                                <option value="mai">Mai</option>
+                                <option value="juin">Juin</option>
+                                <option value="juillet">Juillet</option>
+                                <option value="aoÃ»t">AoÃ»t</option>
+                                <option value="septembre">Septembre</option>
+                                <option value="octobre">Octobre</option>
+                                <option value="novembre">Novembre</option>
+                                <option value="dÃ©cembre">DÃ©cembre</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="subscriptionDate">Date d'Abonnement *</label>
+                            <input type="date" id="subscriptionDate" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clientAmount">Montant VersÃ© (FCFA) *</label>
+                            <input type="number" id="clientAmount" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="clientStatus">Statut</label>
+                            <select id="clientStatus">
+                                <option value="en-attente">En attente</option>
+                                <option value="payÃ©">PayÃ©</option>
+                                <option value="en-retard">En retard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Enregistrer</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Modal pour ajouter un paiement -->
+        <div id="addPayment" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Enregistrer un Paiement</h3>
+                    <span class="close" onclick="closeModal('addPayment')">&times;</span>
+                </div>
+                <form id="paymentForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="paymentClient">Client *</label>
+                            <select id="paymentClient" required>
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentMonth">Mois *</label>
+                            <select id="paymentMonth" required>
+                                <option value="janvier">Janvier</option>
+                                <option value="fÃ©vrier">FÃ©vrier</option>
+                                <option value="mars">Mars</option>
+                                <option value="avril">Avril</option>
+                                <option value="mai">Mai</option>
+                                <option value="juin">Juin</option>
+                                <option value="juillet">Juillet</option>
+                                <option value="aoÃ»t">AoÃ»t</option>
+                                <option value="septembre">Septembre</option>
+                                <option value="octobre">Octobre</option>
+                                <option value="novembre">Novembre</option>
+                                <option value="dÃ©cembre">DÃ©cembre</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="paymentDate">Date de Paiement *</label>
+                            <input type="date" id="paymentDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentAmount">Montant (FCFA) *</label>
+                            <input type="number" id="paymentAmount" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Enregistrer</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Modal pour ajouter des charges d'entreprise -->
+        <div id="addCharge" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Ajouter des Charges d'Entreprise</h3>
+                    <span class="close" onclick="closeModal('addCharge')">&times;</span>
+                </div>
+                <form id="chargeForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="chargeMonth">Mois *</label>
+                            <select id="chargeMonth" required>
+                                <option value="janvier">Janvier</option>
+                                <option value="fÃ©vrier">FÃ©vrier</option>
+                                <option value="mars">Mars</option>
+                                <option value="avril">Avril</option>
+                                <option value="mai">Mai</option>
+                                <option value="juin">Juin</option>
+                                <option value="juillet">Juillet</option>
+                                <option value="aoÃ»t">AoÃ»t</option>
+                                <option value="septembre">Septembre</option>
+                                <option value="octobre">Octobre</option>
+                                <option value="novembre">Novembre</option>
+                                <option value="dÃ©cembre">DÃ©cembre</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="chargeType">Type de Charge *</label>
+                            <select id="chargeType" required>
+                                <option value="loyer">Loyer</option>
+                                <option value="salaires">Salaires</option>
+                                <option value="Ã©quipement">Ã‰quipement</option>
+                                <option value="internet">Internet</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="autres">Autres</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="chargeDescription">Description</label>
+                            <input type="text" id="chargeDescription">
+                        </div>
+                        <div class="form-group">
+                            <label for="chargeAmount">Montant (FCFA) *</label>
+                            <input type="number" id="chargeAmount" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="chargeDate">Date *</label>
+                        <input type="date" id="chargeDate" required>
+                    </div>
+                    <button type="submit" class="btn">Enregistrer</button>
+                </form>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Â© 2025 Xtrem Net - SystÃ¨me de Gestion ClientÃ¨le | Tous droits rÃ©servÃ©s</p>
+        </footer>
+    </div>
+
+    <!-- Notification container -->
+    <div id="notification" class="notification"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
